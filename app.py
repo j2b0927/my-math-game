@@ -5,10 +5,10 @@ import time
 # 페이지 설정
 st.set_page_config(page_title="말랑말랑 레벨업 수학", page_icon="🎨", layout="centered")
 
-# --- [모바일 화면 강제 가로 고정 및 레이아웃 최적화 CSS] ---
+# --- [모바일 가로고정 키패드 및 여백 최적화 테마 CSS] ---
 st.markdown("""
 <style>
-    /* 1. 스크롤바 완전 차단 및 모바일 화면 강제 고정 */
+    /* 1. 모바일 스크롤 완벽 차단 */
     html, body, [data-testid="stAppViewContainer"] {
         max-height: 100vh !important;
         overflow: hidden !important;
@@ -26,141 +26,140 @@ st.markdown("""
         100% { background-position: 0% 50%; }
     }
     
+    /* 요소들이 너무 붙지 않도록 위아래 균등 분배 패딩 조절 */
     .block-container {
-        padding: 0.3rem 0.5rem !important;
+        padding: 0.6rem 0.8rem !important;
         display: flex !important;
         flex-direction: column !important;
         justify-content: space-between !important;
         height: 100vh !important;
     }
     
-    [data-testid="stVerticalBlock"] { gap: 0.05rem !important; }
-    hr { margin: 0.2rem 0 !important; opacity: 0.2; }
-    h1 { color: #554488; font-size: 1.1rem !important; text-align: center; margin: 0 !important; }
+    [data-testid="stVerticalBlock"] { gap: 0.2rem !important; }
+    hr { margin: 0.3rem 0 !important; opacity: 0.2; }
+    h1 { color: #554488; font-size: 1.3rem !important; text-align: center; margin: 0 !important; }
     
     .score-box { 
-        background-color: white; padding: 2px 6px; border-radius: 8px; 
-        border: 1.5px solid #FFC0CB; text-align: center; margin: 0.1rem auto !important; width: 80%;
+        background-color: white; padding: 4px 8px; border-radius: 10px; 
+        border: 1.5px solid #FFC0CB; text-align: center; margin: 0.2rem auto !important; width: 85%;
     }
-    .score-box h2 { font-size: 0.85rem !important; margin: 0 !important; color: #CC4488; font-weight: bold; }
+    .score-box h2 { font-size: 1rem !important; margin: 0 !important; color: #CC4488; font-weight: bold; }
 
-    /* 문제 수식 가독성 확보 */
+    /* 문제 수식 크기 및 여백 시원하게 조절 */
     .quiz-text {
-        color: #6644AA; font-size: 2.2rem !important; font-weight: bold; text-align: center; margin: 0.1rem 0 !important;
+        color: #6644AA; font-size: 2.5rem !important; font-weight: bold; text-align: center; margin: 0.3rem 0 !important;
     }
 
-    /* 5개 주머니 스타일 */
+    /* 5개 주머니 묶음 레이아웃 간격 확보 */
     .five-group {
-        display: inline-flex; background-color: rgba(255, 255, 255, 0.6);
-        padding: 4px 6px; border-radius: 10px; margin: 2px 3px; border: 1.5px dashed #FFB6C1;
+        display: inline-flex; background-color: rgba(255, 255, 255, 0.75);
+        padding: 6px 8px; border-radius: 12px; margin: 4px 5px; border: 1.5px dashed #FFB6C1;
     }
     
-    /* 💥 그림 크기 대폭 확대 (기존 22px -> 42px로 2배 확대!) */
+    /* 💥 캐릭터 그림 크기 확대 고정 (터치하기 좋게 최적화) */
     .char-img { 
-        width: 42px !important;
-        height: 42px !important;
+        width: 38px !important;
+        height: 38px !important;
         margin: 2px;
-        transition: transform 0.1s;
     }
     
-    /* 덧셈용 그림자 빈칸 확대 */
+    /* 덧셈용 그림자 빈칸 주머니 큼직하게 변경 */
     .shadow-img-box {
         display: inline-block;
-        width: 42px !important;
-        height: 42px !important;
+        width: 38px !important;
+        height: 38px !important;
         margin: 2px;
-        background-color: rgba(0,0,0,0.15);
+        background-color: rgba(0, 0, 0, 0.12);
         border-radius: 50%;
+        border: 1px dashed #aaa;
     }
     
-    /* 🎈 화면 중앙에 크게 터지는 풍선 이펙트 */
+    /* 🎈 펑 터지며 솟아오르는 대형 풍선 애니메이션 효과 */
     .balloon-pop {
         position: absolute;
         left: 50%;
-        top: 25%;
+        top: 30%;
         transform: translate(-50%, -50%);
         color: #FF477E;
         font-weight: bold;
-        font-size: 2.5rem !important; /* 아이가 확실히 볼 수 있게 크기 확대 */
-        text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        font-size: 2.8rem !important;
+        text-shadow: 2px 2px 5px rgba(0,0,0,0.25);
         animation: floatUp 0.8s ease-out forwards;
         pointer-events: none;
         z-index: 9999;
     }
     @keyframes floatUp {
-        0% { opacity: 0; transform: translate(-50%, -10px) scale(0.5); }
-        30% { opacity: 1; transform: translate(-50%, -30px) scale(1.2); }
-        100% { opacity: 0; transform: translate(-50%, -70px) scale(1.5); }
+        0% { opacity: 0; transform: translate(-50%, 0px) scale(0.6); }
+        20% { opacity: 1; transform: translate(-50%, -20px) scale(1.2); }
+        100% { opacity: 0; transform: translate(-50%, -80px) scale(1.4); }
     }
 
-    .hint-title { font-size: 0.8rem !important; font-weight: bold; color: #4466AA; margin: 0 !important; text-align: center; }
+    .hint-title { font-size: 0.85rem !important; font-weight: bold; color: #4466AA; margin: 0.2rem 0 !important; text-align: center; }
 
-    /* 정답 모니터 창 */
+    /* 정답 모니터 창 크기 확대 */
     .ans-display {
-        background-color: #F0F9FF; border: 2.5px solid #7DD3FC; border-radius: 10px;
-        padding: 3px; text-align: center; font-size: 1.5rem !important;
-        font-weight: bold; color: #0369A1; min-height: 36px; margin: 0.2rem auto !important; width: 75%;
+        background-color: #F0F9FF; border: 2.5px solid #7DD3FC; border-radius: 12px;
+        padding: 4px; text-align: center; font-size: 1.7rem !important;
+        font-weight: bold; color: #0369A1; min-height: 42px; margin: 0.4rem auto !important; width: 80%;
     }
 
-    /* --- 📱 모바일에서 무조건 가로 정렬을 유지시키는 특별 키패드 구조 --- */
+    /* --- 📱 모바일 세로 쪼개짐 철저 방지 가로형 키패드 폼 --- */
     .keypad-outer-box {
         border: 2.5px solid #93C5FD; 
         background-color: rgba(239, 246, 255, 0.95);
         border-radius: 14px; 
-        padding: 8px; 
-        margin: 0 auto; 
+        padding: 10px; 
+        margin: 0 auto 0.5rem auto; 
         width: 100%; 
         max-width: 360px;
         box-sizing: border-box;
     }
     
-    /* 스트림릿의 모바일 세로 쪼개짐을 방지하는 특제 가로 정렬 컨테이너 */
     .flex-row-container {
         display: flex !important;
         flex-direction: row !important;
         width: 100% !important;
-        gap: 6px !important;
-        margin-bottom: 6px;
+        gap: 8px !important;
     }
     
     .number-grid-area {
         display: flex !important;
         flex-direction: column !important;
-        flex: 4 !important;
-        gap: 6px !important;
+        flex: 3.8 !important;
+        gap: 8px !important;
     }
     
     .number-row {
         display: flex !important;
         flex-direction: row !important;
         width: 100% !important;
-        gap: 5px !important;
+        gap: 6px !important;
     }
     
     .action-button-area {
         display: flex !important;
         flex-direction: column !important;
-        flex: 1.2 !important;
-        gap: 6px !important;
+        flex: 1.4 !important;
+        gap: 8px !important;
     }
 
-    /* 모든 키패드 버튼 통합 스타일 고정 */
+    /* 누르기 편한 단추 디자인 */
     .custom-key-btn {
         width: 100% !important;
-        height: 40px !important;
+        height: 44px !important;
         background-color: #FEF08A !important;
         color: #854D0E !important;
         border: 1.5px solid #FDE047 !important;
         border-radius: 8px !important;
-        font-size: 1.1rem !important;
+        font-size: 1.2rem !important;
         font-weight: bold !important;
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
     }
     
-    .custom-key-btn.clear { background-color: #FCA5A5 !important; color: #7F1D1D !important; border-color: #F87171 !important; font-size: 0.85rem !important;}
-    .custom-key-btn.submit { background-color: #86EFAC !important; color: #14532D !important; border-color: #4ADE80 !important; font-size: 0.85rem !important;}
+    .custom-key-btn.clear { background-color: #FCA5A5 !important; color: #7F1D1D !important; border-color: #F87171 !important; font-size: 0.9rem !important;}
+    .custom-key-btn.submit { background-color: #86EFAC !important; color: #14532D !important; border-color: #4ADE80 !important; font-size: 0.9rem !important;}
 </style>
 """, unsafe_allow_html=True)
 
@@ -173,7 +172,7 @@ CHARACTER_URLS = {
 }
 CHAR_KEYS = list(CHARACTER_URLS.keys())
 
-# 상태 관리 저장소
+# 앱 상태 보관
 if "score" not in st.session_state: st.session_state.score = 0
 if "needs_new_question" not in st.session_state: st.session_state.needs_new_question = True
 if "input_buffer" not in st.session_state: st.session_state.input_buffer = ""
@@ -192,7 +191,7 @@ def generate_question(game_mode, level):
     if level == "1단계 (초급)":
         if op == "+":
             n1 = random.randint(1, 10)
-            n2 = random.randint(1, 5) # 화면 크기를 위해 n2 가닥 조율
+            n2 = random.randint(1, 5)
         else:
             n1 = random.randint(2, 12)
             n2 = random.randint(1, n1)
@@ -206,14 +205,14 @@ def generate_question(game_mode, level):
     st.session_state.minus_clicks = 0
     st.session_state.balloon_trigger = False
 
-# 사이드바 설정
+# 대시보드 옵션창
 game_mode = st.sidebar.selectbox("연산 선택", ["1. 덧셈, 뺄셈", "2. 덧셈, 뺄셈, 곱셈, 나눗셈"])
 level = st.sidebar.selectbox("난이도 선택", ["1단계 (초급)", "2단계 (중급)", "3단계 (고급)"])
 
 if st.session_state.needs_new_question:
     generate_question(game_mode, level)
 
-# 메인 인터페이스
+# 타이틀 및 스코어 보드
 st.markdown("<h1>🎨 말랑말랑 수학</h1>", unsafe_allow_html=True)
 st.markdown(f"<div class='score-box'><h2>✨ 점수: {st.session_state.score}점 ✨</h2></div>", unsafe_allow_html=True)
 
@@ -223,18 +222,18 @@ n1, n2, op = st.session_state.num1, st.session_state.num2, st.session_state.oper
 st.markdown(f"<div class='quiz-text'>{n1} {op} {n2} = ?</div>", unsafe_allow_html=True)
 st.markdown("---")
 
-# 🎈 실시간 풍선 이펙트 출력출구
+# 🎈 펑 터지는 실시간 풍선 컴포넌트
 if st.session_state.balloon_trigger:
     st.markdown(f"<div class='balloon-pop'>{st.session_state.balloon_text}</div>", unsafe_allow_html=True)
-    st.session_state.balloon_trigger = False # 연속 노출 방지 초기화
+    st.session_state.balloon_trigger = False
 
-# 힌트 뷰어 영역 (그림 확대 반영)
+# 1단계 인터랙티브 주머니 터치 빌더
 if level == "1단계 (초급)":
-    st.markdown("<div class='hint-title'>💡 버튼을 눌러 정답을 맞춰보세요!</div>", unsafe_allow_html=True)
+    st.markdown("<div class='hint-title'>💡 버튼을 눌러 숫자를 세어보세요!</div>", unsafe_allow_html=True)
     
     if op == "-":
         visible_count = max(0, n1 - st.session_state.minus_clicks)
-        html = "<div style='text-align: center; min-height: 55px;'>"
+        html = "<div style='text-align: center; min-height: 60px;'>"
         for i in range(visible_count // 5):
             html += "<div class='five-group'>" + f'<img src="{char_url}" class="char-img">'*5 + "</div>"
         if visible_count % 5 > 0:
@@ -250,18 +249,16 @@ if level == "1단계 (초급)":
                 st.rerun()
                 
     elif op == "+":
-        # n1 그리기
         html_n1 = "<div style='text-align: center;'>"
         for _ in range(n1 // 5): html_n1 += "<div class='five-group'>" + f'<img src="{char_url}" class="char-img">'*5 + "</div>"
         if n1 % 5 > 0: html_n1 += "<div class='five-group'>" + f'<img src="{char_url}" class="char-img">'*(n1%5) + "</div>"
         html_n1 += "</div>"
         st.markdown(html_n1, unsafe_allow_html=True)
         
-        # n2 그림자 영역 그리기
         filled = st.session_state.plus_clicks
         unfilled = max(0, n2 - filled)
         
-        html_n2 = "<div style='text-align: center; min-height: 55px;'>"
+        html_n2 = "<div style='text-align: center; min-height: 60px;'>"
         items = [f'<img src="{char_url}" class="char-img">' for _ in range(filled)] + [f'<div class="shadow-img-box"></div>' for _ in range(unfilled)]
         for i in range(0, len(items), 5):
             html_n2 += "<div class='five-group'>" + "".join(items[i:i+5]) + "</div>"
@@ -276,35 +273,29 @@ if level == "1단계 (초급)":
                 st.rerun()
     st.markdown("---")
 else:
-    st.markdown("<p style='text-align: center; color: #88AABB; margin:0; font-size:0.8rem;'>중급/고급은 머릿속으로 계산해요! 💪</p>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align: center; color: #88AABB; margin:0;'>중급/고급은 머릿속으로 계산해요! 💪</p>", unsafe_allow_html=True)
     st.markdown("---")
 
-# 정답 판독 디스플레이 창
+# 정답 판독기 디스플레이 창
 disp = st.session_state.input_buffer if st.session_state.input_buffer else "?"
 st.markdown(f"<div class='ans-display'>{disp}</div>", unsafe_allow_html=True)
 
 
-# --- [HTML Injection 방식을 이용한 모바일 무조건 가로 고정 전용 패드 구현] ---
-# 수십 번의 모바일 화면 깨짐 이슈를 물리적으로 차단하는 완전 가로 정형 특제 폼 구조입니다.
-
-# 고유 이벤트 처리를 위해 유일키를 가진 12개의 히든 버튼을 먼저 생성해 둡니다.
+# --- 백엔드 연결용 단추 (에러 유발 소지였던 'gap' 파라미터 완전 삭제) ---
 if 'hidden_click' not in st.session_state: st.session_state.hidden_click = None
 
-# 보이지 않는 감지 프레임 생성
-col_keys = st.columns(12, gap="0px")
+col_keys = st.columns(12)
 key_labels = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "clear", "submit"]
 
 for idx, label in enumerate(key_labels):
     with col_keys[idx]:
-        # 완전히 숨겨진 미니 버튼들을 배치하여 백엔드 동작을 연동시킵니다.
         if st.button(label, key=f"hid_{label}", label_visibility="collapsed"):
             st.session_state.hidden_click = label
             st.rerun()
 
-# 감지된 클릭 이벤트 백엔드 연산 처리하기
 if st.session_state.hidden_click:
     click_val = st.session_state.hidden_click
-    st.session_state.hidden_click = None # 리셋
+    st.session_state.hidden_click = None
     
     if click_val in ["1","2","3","4","5","6","7","8","9","0"]:
         if click_val == "0" and not st.session_state.input_buffer:
@@ -332,7 +323,7 @@ if st.session_state.hidden_click:
                 st.session_state.minus_clicks = 0
                 time.sleep(0.5); st.rerun()
 
-# 🎨 아이가 실제로 터치하는 진짜 고정형 가로 2줄 UI 드로잉
+# 📱 윗줄 [1,2,3,4,5], 아랫줄 [6,7,8,9,0] 가로 절대보장 특제 UI 드로잉
 st.markdown(f"""
 <div class="keypad-outer-box">
     <div class="flex-row-container">
