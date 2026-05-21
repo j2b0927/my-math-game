@@ -1,125 +1,125 @@
 import streamlit as st
 import random
+import time
 
-# 페이지 기본 설정 (스마트폰 최적화 및 타이틀 아이콘 변경)
+# 페이지 기본 설정 (스마트폰 최적화)
 st.set_page_config(page_title="말랑말랑 레벨업 수학", page_icon="🎨", layout="centered")
 
-# --- [디자인 치트키] 알록달록 파스텔톤 테마 적용 ---
+# --- [디자인 & 애니메이션 치트키] 파스텔톤, 움직이는 배경, 캐릭터 튕김 효과 ---
 st.markdown("""
 <style>
-    /* 전체 배경색: 따뜻한 파스텔크림 */
+    /* 전체 배경: 은은하게 움직이는 파스텔 그라데이션 */
     .stApp {
-        background-color: #FAF8F1;
+        background: linear-gradient(-45deg, #FAF8F1, #FFE0F0, #E6E6FA, #FFE0F0);
+        background-size: 400% 400%;
+        animation: gradient 15s ease infinite;
     }
-    /* 사이드바 배경색: 파스텔라벤더 */
-    [data-testid="stSidebar"] {
-        background-color: #E6E6FA;
+    @keyframes gradient {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
     }
-    /* 큰 타이틀 텍스트: 말랑말랑한 폰트 느낌 */
-    h1 {
-        color: #554488;
-        font-family: 'MapleStory', sans-serif;
+    
+    /* [모바일 반응형] 휴대폰 화면 크기에 맞춰 글씨 크기 자동 조절 */
+    html {
+        font-size: calc(14px + 0.5vw);
     }
-    /* 서브 타이틀: 진한 파스텔블루 */
-    h3 {
-        color: #4466AA;
+    
+    h1 { color: #554488; font-family: 'sans-serif'; text-align: center; }
+    h2 { color: #CC4488; text-align: center; }
+    
+    /* 점수판 디자인 */
+    .score-box { 
+        background-color: white; 
+        padding: 15px; 
+        border-radius: 20px; 
+        border: 2px solid #FFC0CB; 
+        box-shadow: 0 4px 6px rgba(0,0,0,0.05); 
+        text-align: center; 
+        margin-bottom: 20px; 
     }
-    /* 점수판 박스 디자인 */
-    .score-box {
-        background-color: #FFE0F0; /* 파스텔핑크 */
-        padding: 10px;
+
+    /* 5개 단위로 묶어줄 주머니(그룹) 스타일 */
+    .five-group {
+        display: inline-flex;
+        background-color: rgba(255, 255, 255, 0.6); /* 연한 흰색 바탕으로 5개 묶음 강조 */
+        padding: 8px;
         border-radius: 15px;
-        border: 2px solid #FFC0CB;
-        text-align: center;
-        margin-bottom: 20px;
+        margin: 5px 10px; /* 5개 묶음끼리 약간 띄우기 */
+        border: 1px dashed #FFB6C1;
+    }
+
+    /* [움직임 치트키] 손으로 누르거나 마우스를 대면 찡긋 웃고 통 튕기는 캐릭터 */
+    .char-img {
+        width: 40px;
+        height: 40px;
+        margin: 3px;
+        transition: transform 0.2s ease-in-out;
+        cursor: pointer;
+    }
+    .char-img:active, .char-img:hover {
+        animation: bounceWink 0.4s ease;
+        transform: scale(1.3); /* 누르면 조금 더 크게 튕김 */
+    }
+    @keyframes bounceWink {
+        0% { transform: scale(1) rotate(0deg); }
+        30% { transform: scale(1.3) rotate(-8deg); }
+        70% { transform: scale(1.2) rotate(8deg); }
+        100% { transform: scale(1) rotate(0deg); }
     }
 </style>
 """, unsafe_allow_html=True)
 
-# --- [캐릭터 치트키] 말랑말랑한 귀여운 일러스트 아이콘 (Flaticon 이미지 URL 사용) ---
-# ※ 이 이미지는 무료 아이콘 사이트인 Flaticon의 이미지를 참고용으로 사용했습니다.
+# --- [캐릭터 치트키] 말랑말랑한 고화질 아이콘 URL ---
 CHARACTER_URLS = {
     "bunny": "https://cdn-icons-png.flaticon.com/512/3261/3261168.png", # 말랑토끼
     "bear": "https://cdn-icons-png.flaticon.com/512/1000/1000966.png",  # 말랑곰
     "apple": "https://cdn-icons-png.flaticon.com/512/2909/2909787.png", # 말랑사과
     "berry": "https://cdn-icons-png.flaticon.com/512/2316/2316886.png", # 말랑딸기
-    "cat": "https://cdn-icons-png.flaticon.com/512/616/616430.png",    # 말랑고양이
-    "duck": "https://cdn-icons-png.flaticon.com/512/4392/4392476.png"   # 말랑오리
+    "cat": "https://cdn-icons-png.flaticon.com/512/616/616430.png"     # 말랑고양이
 }
 CHAR_KEYS = list(CHARACTER_URLS.keys())
 
-# 세션 상태(기억장치) 초기화
-if "score" not in st.session_state:
-    st.session_state.score = 0
-if "num1" not in st.session_state:
-    st.session_state.num1 = 0
-if "num2" not in st.session_state:
-    st.session_state.num2 = 0
-if "operator" not in st.session_state:
-    st.session_state.operator = "+"
-if "char_key" not in st.session_state:
-    st.session_state.char_key = random.choice(CHAR_KEYS)
-if "message" not in st.session_state:
-    st.session_state.message = ""
-if "msg_type" not in st.session_state:
-    st.session_state.msg_type = "info"
-if "needs_new_question" not in st.session_state:
-    st.session_state.needs_new_question = True
+# 세션 상태 초기화
+if "score" not in st.session_state: st.session_state.score = 0
+if "needs_new_question" not in st.session_state: st.session_state.needs_new_question = True
 
-# 문제 생성 함수
 def generate_question(game_mode, level):
     st.session_state.char_key = random.choice(CHAR_KEYS)
     
-    if game_mode == "1. 덧셈, 뺄셈":
-        op = random.choice(["+", "-"])
-    else:
-        op = random.choice(["+", "-", "×", "÷"])
-        
+    if game_mode == "1. 덧셈, 뺄셈": op = random.choice(["+", "-"])
+    else: op = random.choice(["+", "-", "×", "÷"])
     st.session_state.operator = op
     
     if op in ["+", "-"]:
         if level == "1단계 (초급)":
             if op == "+":
-                n1, n2 = random.randint(0, 10), random.randint(0, 10) # 1학년 난이도로 더 하향조절
+                n1 = random.randint(1, 10)
+                n2 = random.randint(1, 10)
             else:
-                n1 = random.randint(0, 20)
-                n2 = random.randint(0, n1)
+                n1 = random.randint(2, 20)
+                n2 = random.randint(1, n1)
         elif level == "2단계 (중급)":
-            if op == "+":
-                n1, n2 = random.randint(0, 50), random.randint(0, 50)
-            else:
-                n1 = random.randint(0, 100)
-                n2 = random.randint(0, n1)
-        else: # 3단계 고급
-            n1, n2 = random.randint(0, 500), random.randint(0, 500)
+            if op == "+": n1, n2 = random.randint(1, 50), random.randint(1, 50)
+            else: n1 = random.randint(1, 100); n2 = random.randint(1, n1)
+        else:
+            n1, n2 = random.randint(10, 500), random.randint(10, 500)
                 
     elif op == "×":
-        if level == "1단계 (초급)":
-            n1, n2 = random.randint(1, 9), random.randint(1, 5)
-        elif level == "2단계 (중급)":
-            n1, n2 = random.randint(2, 19), random.randint(1, 10)
-        else:
-            n1, n2 = random.randint(10, 50), random.randint(2, 20)
+        if level == "1단계 (초급)": n1, n2 = random.randint(1, 9), random.randint(1, 5)
+        elif level == "2단계 (중급)": n1, n2 = random.randint(2, 19), random.randint(1, 10)
+        else: n1, n2 = random.randint(10, 50), random.randint(2, 20)
             
     elif op == "÷":
-        if level == "1단계 (초급)":
-            n2 = random.randint(1, 5)
-            ans = random.randint(1, 5)
-            n1 = n2 * ans
-        elif level == "2단계 (중급)":
-            n2 = random.randint(2, 9)
-            ans = random.randint(2, 10)
-            n1 = n2 * ans
-        else:
-            n2 = random.randint(5, 20)
-            ans = random.randint(5, 30)
-            n1 = n2 * ans
+        if level == "1단계 (초급)": n2 = random.randint(1, 5); ans = random.randint(1, 5); n1 = n2 * ans
+        elif level == "2단계 (중급)": n2 = random.randint(2, 9); ans = random.randint(2, 10); n1 = n2 * ans
+        else: n2 = random.randint(5, 20); ans = random.randint(5, 30); n1 = n2 * ans
 
     st.session_state.num1 = n1
     st.session_state.num2 = n2
     st.session_state.needs_new_question = False
 
-# 사이드바 설정창 (파스텔색 적용)
+# 사이드바 설정창
 st.sidebar.markdown("<h2 style='color: #6644AA;'>⚙️ 게임 설정</h2>", unsafe_allow_html=True)
 game_mode = st.sidebar.selectbox("연산 종류 선택", ["1. 덧셈, 뺄셈", "2. 덧셈, 뺄셈, 곱셈, 나눗셈"])
 level = st.sidebar.selectbox("난이도 선택", ["1단계 (초급)", "2단계 (중급)", "3단계 (고급)"])
@@ -127,10 +127,8 @@ level = st.sidebar.selectbox("난이도 선택", ["1단계 (초급)", "2단계 (
 if st.sidebar.button("🎨 새로운 게임 시작하기") or st.session_state.needs_new_question:
     generate_question(game_mode, level)
 
-# 메인 화면 디자인
-st.markdown("<h1 style='text-align: center;'>🎨 말랑말랑 레벨업 수학</h1>", unsafe_allow_html=True)
-
-# 점수판 (알록달록 박스)
+# 메인 제목 및 점수판
+st.markdown("<h1>🎨 말랑말랑 레벨업 수학</h1>", unsafe_allow_html=True)
 st.markdown(f"""
 <div class='score-box'>
     <h4 style='color: #EE6688; margin: 0;'>현재 설정: {game_mode} / {level}</h4>
@@ -138,92 +136,95 @@ st.markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
-# 현재 문제 불러오기
-char_key = st.session_state.char_key
-char_url = CHARACTER_URLS[char_key]
-n1 = st.session_state.num1
-n2 = st.session_state.num2
-op = st.session_state.operator
+char_url = CHARACTER_URLS[st.session_state.char_key]
+n1, n2, op = st.session_state.num1, st.session_state.num2, st.session_state.operator
 
-# 정답 계산
 if op == "+": correct = n1 + n2
 elif op == "-": correct = n1 - n2
 elif op == "×": correct = n1 * n2
 elif op == "÷": correct = n1 // n2
 
-# 문제 대형 표시 (색상 변경)
-st.markdown("<h1 style='text-align: center; color: #6644AA; font-size: 75px;'> %d %s %d = ? </h1>" % (n1, op, n2), unsafe_allow_html=True)
+# 문제 대형 표시
+st.markdown("<h1 style='color: #6644AA; font-size: 3.8rem; text-align: center;'> %d %s %d = ? </h1>" % (n1, op, n2), unsafe_allow_html=True)
 st.markdown("---")
 
-# [핵심 변경] 초급 단계에서만 귀여운 캐릭터 일러스트 힌트 제공
-if level == "1단계 (초급)":
-    st.markdown("### 💡 말랑말랑 힌트 창")
+# [핵심] 5개 단위로 정렬하여 화면에 그리는 함수 구현
+def draw_five_grouped_images(total_count):
+    if total_count <= 0:
+        st.markdown("<p style='color:gray;'>0개</p>", unsafe_allow_html=True)
+        return
+        
+    full_groups = total_count // 5
+    remainder = total_count % 5
     
-    # 캐릭터 이미지를 가로로 나열하는 HTML
+    html_result = "<div style='text-align: center;'>"
+    
+    # 5개짜리 묶음 주머니 만들기
+    for _ in range(full_groups):
+        html_result += "<div class='five-group'>"
+        for _ in range(5):
+            html_result += f'<img src="{char_url}" class="char-img" title="눌러봐요!">'
+        html_result += "</div>"
+        
+    # 남은 자투리 주머니 만들기
+    if remainder > 0:
+        html_result += "<div class='five-group'>"
+        for _ in range(remainder):
+            html_result += f'<img src="{char_url}" class="char-img" title="눌러봐요!">'
+        html_result += "</div>"
+        
+    html_result += "</div>"
+    st.markdown(html_result, unsafe_allow_html=True)
+
+# 1단계 초급에서만 5개 단위 정렬 및 터치 반응형 힌트 노출
+if level == "1단계 (초급)":
+    st.markdown("### 💡 말랑말랑 힌트 창 (그림을 터치하면 튕겨요!)")
+    
     if op == "+":
-        col1, col2 = st.columns(2)
-        with col1:
-            st.markdown(f"**앞의 숫자 ({n1}) 만큼:**")
-            html_str = "".join([f'<img src="{char_url}" width="35" style="margin: 2px;">' for _ in range(n1)])
-            st.markdown(html_str, unsafe_allow_html=True)
-        with col2:
-            st.markdown(f"**뒤의 숫자 ({n2}) 만큼:**")
-            html_str = "".join([f'<img src="{char_url}" width="35" style="margin: 2px;">' for _ in range(n2)])
-            st.markdown(html_str, unsafe_allow_html=True)
-            
+        st.markdown(f"**앞의 숫자 ({n1}) 만큼:**")
+        draw_five_grouped_images(n1)
+        st.markdown(f"**뒤의 숫자 ({n2}) 만큼:**")
+        draw_five_grouped_images(n2)
+        
     elif op == "-":
-        st.markdown(f"**전체 {n1}개 중에서 {n2}개를 지워보세요!**")
-        html_str = "".join([f'<img src="{char_url}" width="40" style="margin: 3px;">' for _ in range(n1)])
-        st.markdown(html_str, unsafe_allow_html=True)
+        st.markdown(f"**전체 {n1}개 중에서 {n2}개를 손가락으로 가리고 세어보세요!**")
+        draw_five_grouped_images(n1)
         
     elif op == "×":
         st.markdown(f"**{n1}개씩 {n2} 묶음이에요!**")
         for i in range(n2):
-            html_str = f"📍 {i+1}층: " + "".join([f'<img src="{char_url}" width="30" style="margin: 2px;">' for _ in range(n1)])
-            st.markdown(html_str, unsafe_allow_html=True)
+            st.markdown(f"📍 {i+1}번째 묶음 ({n1}개)")
+            draw_five_grouped_images(n1)
             
     elif op == "÷":
         st.markdown(f"**전체 {n1}개를 {n2}명이 똑같이 나누어 가질 거예요.**")
-        st.image(char_url, width=60, caption="이 귀여운 친구들이 나눠 가져요!")
+        st.markdown(f"<div style='text-align:center;'><img src='{char_url}' style='width:70px; animation: bounceWink 1s infinite;'></div>", unsafe_allow_html=True)
     st.markdown("---")
 else:
-    st.markdown("<p style='text-align: center; color: #88AABB;'>중급/고급 단계는 그림 힌트 없이 머릿속으로 계산해봐요! 💪</p>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align: center; color: #88AABB; font-size: 1.1rem;'>중급/고급 단계는 그림 힌트 없이 머릿속으로 계산해봐요! 💪</p>", unsafe_allow_html=True)
     st.markdown("---")
 
-# 정답 입력창 및 확인 버튼 (디자인 변경)
+# 정답 입력칸
 with st.form(key="game_form", clear_on_submit=True):
-    user_ans = st.number_input("정답 숫자를 적고 확인 버튼을 눌러주세요!", min_value=0, max_value=2000, step=1, value=0)
+    st.markdown("### ✍️ 정답 적기")
+    user_ans = st.number_input("", min_value=0, max_value=2000, step=1, value=0, label_visibility="collapsed")
     
-    # 버튼 색상 변경 (파스텔블루)
     st.markdown("""
     <style>
         div.stButton > button:first-child {
-            background-color: #55AADD;
-            color: white;
-            border-radius: 20px;
-            border: none;
-            font-weight: bold;
+            background-color: #55AADD; color: white; border-radius: 20px; border: none; font-weight: bold; width: 100%; padding: 10px;
         }
     </style>
     """, unsafe_allow_html=True)
     submit_btn = st.form_submit_button(label="정답 확인! 👍")
 
-# 정답 피드백 메시지 (알록달록 풍선)
 if submit_btn:
     if user_ans == correct:
         st.session_state.score += 10
-        st.session_state.message = f"🎉 딩동댕! 정답이에요! [{n1} {op} {n2} = {correct}] 참 잘했어요! (+10점)"
-        st.session_state.msg_type = "success"
+        st.balloons()
+        st.success(f"🎉 딩동댕! 정답이에요! [{n1} {op} {n2} = {correct}] 참 잘했어요! (+10점)")
         st.session_state.needs_new_question = True
+        time.sleep(1)
         st.rerun()
     else:
-        st.session_state.message = "😮 조금만 더 생각해볼까요? 숫자를 다시 확인해보세요!"
-        st.session_state.msg_type = "error"
-
-# 결과 피드백 메시지 띄우기 (알록달록)
-if st.session_state.message:
-    if st.session_state.msg_type == "success":
-        st.balloons() # 성공 시 풍선 애니메이션 추가
-        st.success(st.session_state.message)
-    else:
-        st.error(st.session_state.message)
+        st.error("😮 조금만 더 생각해볼까요? 그림을 다시 차근차근 세어보세요!")
