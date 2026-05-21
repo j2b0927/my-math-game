@@ -103,4 +103,120 @@ CHAR_KEYS = list(CHARACTER_URLS.keys())
 
 # 상태 관리
 if "score" not in st.session_state: st.session_state.score = 0
-if "needs_new_question
+if "needs_new_question" not in st.session_state: st.session_state.needs_new_question = True
+if "input_buffer" not in st.session_state: st.session_state.input_buffer = ""
+
+def generate_question(game_mode, level):
+    st.session_state.char_key = random.choice(CHAR_KEYS)
+    if game_mode == "1. 덧셈, 뺄셈": op = random.choice(["+", "-"])
+    else: op = random.choice(["+", "-", "×", "÷"])
+    st.session_state.operator = op
+    
+    if op in ["+", "-"]:
+        if level == "1단계 (초급)":
+            if op == "+": n1, n2 = random.randint(1, 10), random.randint(1, 10)
+            else: n1 = random.randint(2, 20); n2 = random.randint(1, n1)
+        elif level == "2단계 (중급)":
+            if op == "+": n1, n2 = random.randint(1, 50), random.randint(1, 50)
+            else: n1 = random.randint(1, 100); n2 = random.randint(1, n1)
+        else: n1, n2 = random.randint(10, 500), random.randint(10, 500)
+    else: # 곱셈 나눗셈 생략(기존로직 동일)
+        n1, n2 = random.randint(2, 9), random.randint(2, 9)
+
+    st.session_state.num1, st.session_state.num2 = n1, n2
+    st.session_state.needs_new_question = False
+    st.session_state.input_buffer = ""
+
+# 사이드바 (필요할 때만 꺼내씀)
+game_mode = st.sidebar.selectbox("연산 선택", ["1. 덧셈, 뺄셈", "2. 덧셈, 뺄셈, 곱셈, 나눗셈"])
+level = st.sidebar.selectbox("난이도 선택", ["1단계 (초급)", "2단계 (중급)", "3단계 (고급)"])
+
+if st.session_state.needs_new_question:
+    generate_question(game_mode, level)
+
+# 1. 헤더 & 점수
+st.markdown("<h1>🎨 말랑말랑 수학</h1>", unsafe_allow_html=True)
+st.markdown(f"<div class='score-box'><h2>✨ 점수: {st.session_state.score}점 ✨</h2></div>", unsafe_allow_html=True)
+
+char_url = CHARACTER_URLS[st.session_state.char_key]
+n1, n2, op = st.session_state.num1, st.session_state.num2, st.session_state.operator
+
+# 2. 문제 수식
+st.markdown(f"<div class='quiz-text'>{n1} {op} {n2} = ?</div>", unsafe_allow_html=True)
+st.markdown("---")
+
+# 3. 그림 힌트 (최대한 압축)
+def draw_images(count):
+    if count <= 0: return
+    html = "<div style='text-align: center;'>"
+    for _ in range(count // 5):
+        html += "<div class='five-group'>" + f'<img src="{char_url}" class="char-img">'*5 + "</div>"
+    if count % 5 > 0:
+        html += "<div class='five-group'>" + f'<img src="{char_url}" class="char-img">'*(count%5) + "</div>"
+    html += "</div>"
+    st.markdown(html, unsafe_allow_html=True)
+
+if level == "1단계 (초급)":
+    st.markdown("<div class='hint-title'>💡 힌트 창</div>", unsafe_allow_html=True)
+    draw_images(n1)
+    if op == "+":
+        st.markdown("<div style='text-align:center; font-size:0.7rem;'>➕</div>", unsafe_allow_html=True)
+        draw_images(n2)
+    st.markdown("---")
+
+# 4. 정답 디스플레이
+disp = st.session_state.input_buffer if st.session_state.input_buffer else "?"
+st.markdown(f"<div class='ans-display'>{disp}</div>", unsafe_allow_html=True)
+
+# 5. [와이드 가로형 키패드 - 2줄 배치]
+# 첫 번째 줄: 1 2 3 4 5 6
+c1, c2, c3, c4, c5, c6 = st.columns(6)
+with c1: 
+    if st.button("1"): st.session_state.input_buffer += "1"; st.rerun()
+with c2: 
+    if st.button("2"): st.session_state.input_buffer += "2"; st.rerun()
+with c3: 
+    if st.button("3"): st.session_state.input_buffer += "3"; st.rerun()
+with c4: 
+    if st.button("4"): st.session_state.input_buffer += "4"; st.rerun()
+with c5: 
+    if st.button("5"): st.session_state.input_buffer += "5"; st.rerun()
+with c6: 
+    if st.button("6"): st.session_state.input_buffer += "6"; st.rerun()
+
+# 두 번째 줄: 7 8 9 0 C 확인
+c7, c8, c9, c10, c11, c12 = st.columns(6)
+with c7: 
+    if st.button("7"): st.session_state.input_buffer += "7"; st.rerun()
+with c8: 
+    if st.button("8"): st.session_state.input_buffer += "8"; st.rerun()
+with c9: 
+    if st.button("9"): st.session_state.input_buffer += "9"; st.rerun()
+with c10: 
+    if st.button("0"): 
+        if st.session_state.input_buffer: st.session_state.input_buffer += "0"; st.rerun()
+
+with c11: # 지우기 버튼
+    st.markdown("<div class='clear-btn'>", unsafe_allow_html=True)
+    if st.button("C"): st.session_state.input_buffer = ""; st.rerun()
+    st.markdown("</div>", unsafe_allow_html=True)
+
+with c12: # 확인 버튼
+    st.markdown("<div class='ok-btn'>", unsafe_allow_html=True)
+    ok_btn = st.button("OK")
+    st.markdown("</div>", unsafe_allow_html=True)
+
+# 정답 처리
+if ok_btn:
+    if st.session_state.input_buffer:
+        ans = int(st.session_state.input_buffer)
+        correct = (n1 + n2) if op == "+" else (n1 - n2)
+        if ans == correct:
+            st.session_state.score += 10
+            st.balloons()
+            st.success("정답!")
+            st.session_state.needs_new_question = True
+            time.sleep(0.5); st.rerun()
+        else:
+            st.error("다시!"); st.session_state.input_buffer = ""
+            time.sleep(0.5); st.rerun()
